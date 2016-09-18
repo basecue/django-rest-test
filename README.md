@@ -1,2 +1,2 @@
 # django-rest-tests
-Semiautomated testing for Django REST framework API
+Semi-automated testing for Django REST framework API
