@@ -98,61 +98,14 @@ OPERATIONS = ('create', 'retrieve', 'update', 'delete', 'patch', 'list')
 
 
 class MetaRestTests(type):
-    def _test(self, rest_user=None, operation=''):
-        if rest_user is not None:
-            self.login(rest_user.user)
-        input_data = getattr(
-            self,
-            'input_{operation}_{rest_user.name}'.format(operation=operation, rest_user=rest_user),
-            getattr(self, 'input_{operation}'.format(operation=operation), None)
-        )
-        output_data = getattr(
-            self,
-            'output_{operation}_{rest_user.name}'.format(operation=operation, rest_user=rest_user),
-            getattr(self, 'output_{operation}'.format(operation=operation), None)
-        )
-        response = getattr(self, operation)(input_data)
-        if output_data is None:
-            assert response.status_code == status.HTTP_204_NO_CONTENT
-        else:
-            assert response.status_code == status.HTTP_200_OK
-            self.assert_equal(response, output_data)
-
-    def _test_disabled(self, rest_user=None, operation=''):
-        if rest_user.user is not None:
-            self.login(rest_user.user)
-        response = getattr(self, operation)()
-        self.assert_disabled(response)
 
     def _get_rest_users(self):
         yield from (rest_user for rest_user in self._rest_users)
 
-    def _get_users_operations(self):
-        for operation in OPERATIONS:
-            for rest_user in self._get_rest_users():
-                yield '{rest_user.name}_can_{operation}'.format(rest_user=rest_user, operation=operation), rest_user, operation
-
-    def __getattr__(self, attr_name):
-        for user_operation, user, operation in self._get_users_operations():
-            if user_operation == attr_name:
-                return self._decorator(user, operation)
-
-        if attr_name.startswith('test_'):
-            for test_name, test in self._get_tests():
-                if test_name == attr_name:
-                    return test
-        raise AttributeError
-
-    def _get_test(self, rest_user, operation):
-        if rest_user.can(operation):
-            return partial(self._test, rest_user=rest_user, operation=operation)
-        else:
-            return partial(self._test_disabled, rest_user=rest_user, operation=operation)
-
     def _get_tests(self):
         for rest_user in self._get_rest_users():
             for operation in OPERATIONS:
-                yield 'test_{operation}_by_{rest_user.name}'.format(operation=operation, rest_user=rest_user), self._get_test(rest_user, operation)
+                yield 'test_{operation}_by_{rest_user.name}'.format(operation=operation, rest_user=rest_user), rest_user, operation
 
     def __init__(self, name, bases, attrs):
         rest_users = set()
@@ -174,7 +127,7 @@ class MetaRestTests(type):
         self._rest_users = rest_users
 
     def __dir__(self):
-        yield from (name for name, method in self._get_tests())
+        yield from (name for name, rest_user, operation in self._get_tests())
 
 
 class RestUser(object):
@@ -212,3 +165,46 @@ class RestUser(object):
 
 class RestTests(BaseAPITestCase, metaclass=MetaRestTests):
     anonymous_user = RestUser
+
+    def _test(self, rest_user=None, operation=''):
+        if rest_user is not None:
+            self.login(rest_user.user)
+        input_data = getattr(
+            self,
+            'input_{operation}_{rest_user.name}'.format(operation=operation, rest_user=rest_user),
+            getattr(self, 'input_{operation}'.format(operation=operation), None)
+        )
+        output_data = getattr(
+            self,
+            'output_{operation}_{rest_user.name}'.format(operation=operation, rest_user=rest_user),
+            getattr(self, 'output_{operation}'.format(operation=operation), None)
+        )
+        response = getattr(self, operation)(input_data)
+        if output_data is None:
+            assert response.status_code == status.HTTP_204_NO_CONTENT
+        else:
+            assert response.status_code == status.HTTP_200_OK
+            self.assert_equal(response, output_data)
+
+    def _test_disabled(self, rest_user=None, operation=''):
+        if rest_user.user is not None:
+            self.login(rest_user.user)
+        response = getattr(self, operation)()
+        self.assert_disabled(response)
+
+    def _get_test(self, rest_user, operation):
+        if rest_user.can(operation):
+            return partial(self._test, rest_user=rest_user, operation=operation)
+        else:
+            return partial(self._test_disabled, rest_user=rest_user, operation=operation)
+
+    def _get_test_method(self, name):
+        for test_method_name, rest_user, operation in self._get_tests():
+            if name == test_method_name:
+                return self._get_test(rest_user, operation)
+
+    def __getattr__(self, attr_name):
+        test_method = self._get_test_method(attr_name)
+        if test_method:
+            return test_method
+        raise AttributeError()

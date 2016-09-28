@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 
 setup(
     name='django-rest-tests',
@@ -8,8 +8,7 @@ setup(
     author='Jan Češpivo',
     author_email='jan.cespivo@gmail.com',
     description='Semi-automated testing for Django REST framework API',
-    packages=find_packages(exclude=['tests']),
-    include_package_data=True,
+    packages=['rest_tests'],
     install_requires=["django", "djangorestframework"],
     test_requires=["pytest", "pytest-django"]
 )
