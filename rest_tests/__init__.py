@@ -120,11 +120,14 @@ class MetaRestTests(type):
             rest_users_names |= getattr(base, '_rest_users_names', set())
 
         for attr, value in attrs.items():
-            if value == RestUser:
+            if isinstance(value, type) and issubclass(value, RestUser):
                 rest_users_names.add(attr)
+            elif isinstance(value, RestUser):
+                if value.name is None:
+                    value.name = attr
 
         for rest_user_name in rest_users_names:
-            rest_user = RestUser(rest_user_name, cls)
+            rest_user = RestUser(rest_user_name)
             rest_users.add(rest_user)
             setattr(cls, rest_user_name, rest_user)
 
@@ -137,12 +140,15 @@ class MetaRestTests(type):
 
 
 class RestUser(object):
-    def __init__(self, name, cls):
+    def __init__(self, name=None, **kwargs):
         self.name = name
-        self.cls = cls
-
         self.user = None
         self.allowed_operations = set()
+
+        for operation in OPERATIONS:
+            kwarg = 'can_{}'.format(operation)
+            if kwargs.get(kwarg, False):
+                self.allowed_operations.add(operation)
 
     def __set__(self, obj, user):
         self.user = user

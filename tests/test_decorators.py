@@ -38,10 +38,39 @@ class DecoratorsTestCase(unittest.TestCase):
 
         from rest_tests import RestTests, RestUser
 
-        class DecoratedTests(RestTests):
+        class SimpleTests(RestTests):
             logged_user = RestUser(can_create=True)
 
-        self.assertEqual(DecoratedTests.logged_user.allowed_operations, {'create'})
+        self.assertEqual(SimpleTests.logged_user.allowed_operations, {'create'})
+
+    def test_same_class_user_inheritance(self):
+
+        from rest_tests import RestTests, RestUser
+
+        class SimpleTests(RestTests):
+            logged_user = RestUser(can_create=True)
+
+        class InheritedTests(SimpleTests):
+            pass
+
+        self.assertEqual(InheritedTests.logged_user.allowed_operations, {'create'})
+
+    def test_inheritance(self):
+
+        from rest_tests import RestTests, RestUser
+
+        class SimpleTests(RestTests):
+            logged_user = RestUser
+
+        @SimpleTests.logged_user.can_create
+        class InheritedTests(RestTests):
+            pass
+
+        class InheritedInheritedTests(InheritedTests):
+            pass
+
+        self.assertEqual(InheritedTests.logged_user.allowed_operations, {'create'})
+        self.assertEqual(InheritedInheritedTests.logged_user.allowed_operations, set())
 
     def test_decorated_all_users(self):
         from rest_tests import RestTests, RestUser
@@ -81,7 +110,6 @@ class DecoratorsTestCase(unittest.TestCase):
 
         self.assertEqual(MyTests.anonymous_user.allowed_operations, set())
         self.assertEqual(DecoratedTests.anonymous_user.allowed_operations, {'create'})
-
 
 if __name__ == '__main__':
     unittest.main()
