@@ -92,6 +92,21 @@ class BaseAPITestCase(APITestCase):
 OPERATIONS = ('create', 'retrieve', 'update', 'delete', 'patch', 'list')
 
 
+class AllRestUsers():
+    def _decorator(self, operation):
+        def class_wrapper(cls):
+            for rest_user in cls.rest_users:
+                rest_user.allowed_operations.add(operation)
+            return cls
+        return class_wrapper
+
+    def __getattr__(self, name):
+        for operation in OPERATIONS:
+            if name == 'can_{operation}'.format(operation=operation):
+                return self._decorator(operation)
+        raise AttributeError
+
+
 class MetaRestTests(type):
 
     @property
@@ -125,6 +140,7 @@ class MetaRestTests(type):
             elif isinstance(value, RestUser):
                 if value.name is None:
                     value.name = attr
+                rest_users.add(value)
 
         for rest_user_name in rest_users_names:
             rest_user = RestUser(rest_user_name)
@@ -176,6 +192,8 @@ class RestUser(object):
 
 
 class RestTests(BaseAPITestCase, metaclass=MetaRestTests):
+
+    all_users = AllRestUsers()
     anonymous_user = RestUser
     output_status_create = status.HTTP_201_CREATED
 

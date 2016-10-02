@@ -63,7 +63,7 @@ class DecoratorsTestCase(unittest.TestCase):
             logged_user = RestUser
 
         @SimpleTests.logged_user.can_create
-        class InheritedTests(RestTests):
+        class InheritedTests(SimpleTests):
             pass
 
         class InheritedInheritedTests(InheritedTests):
@@ -71,6 +71,26 @@ class DecoratorsTestCase(unittest.TestCase):
 
         self.assertEqual(InheritedTests.logged_user.allowed_operations, {'create'})
         self.assertEqual(InheritedInheritedTests.logged_user.allowed_operations, set())
+
+    # def test_inheritance_user(self):
+    #     """
+    #     not defined behavior
+    #     """
+    #     from rest_tests import RestTests, RestUser
+    #
+    #     class SimpleTests(RestTests):
+    #         logged_user = RestUser(can_list=True)
+    #
+    #     @SimpleTests.logged_user.can_create
+    #     class InheritedTests(SimpleTests):
+    #         pass
+    #
+    #     class InheritedInheritedTests(InheritedTests):
+    #         pass
+    #
+    #     self.assertEqual(SimpleTests.logged_user.allowed_operations, {'list'})
+    #     self.assertEqual(InheritedTests.logged_user.allowed_operations, {'list', 'create'})
+    #     self.assertEqual(InheritedInheritedTests.logged_user.allowed_operations, {'list'})
 
     def test_decorated_all_users(self):
         from rest_tests import RestTests, RestUser
