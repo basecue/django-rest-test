@@ -2,6 +2,9 @@ import unittest
 
 
 class BasicTestCase(unittest.TestCase):
+    def _dir_tests(self, cls):
+        return [name for name in dir(cls) if name.startswith('test_')]
+
     def test_anonymous(self):
         from rest_tests import RestTests
 
@@ -9,7 +12,7 @@ class BasicTestCase(unittest.TestCase):
             pass
 
         self.assertCountEqual(
-            dir(AnonymousTests),
+            self._dir_tests(AnonymousTests),
             [
                 'test_create_by_anonymous_user',
                 'test_retrieve_by_anonymous_user',
@@ -27,7 +30,7 @@ class BasicTestCase(unittest.TestCase):
             another_user = RestUser
 
         self.assertCountEqual(
-            dir(UserTests),
+            self._dir_tests(UserTests),
             [
                 'test_create_by_anonymous_user',
                 'test_retrieve_by_anonymous_user',
@@ -55,7 +58,7 @@ class BasicTestCase(unittest.TestCase):
             another_user_2 = RestUser
 
         self.assertCountEqual(
-            dir(InheritedUserTests),
+            self._dir_tests(InheritedUserTests),
             [
                 'test_create_by_anonymous_user',
                 'test_retrieve_by_anonymous_user',
@@ -90,7 +93,7 @@ class BasicTestCase(unittest.TestCase):
             another_user = RestUser
 
         self.assertCountEqual(
-            dir(InheritedUserTests),
+            self._dir_tests(InheritedUserTests),
             [
                 'test_create_by_anonymous_user',
                 'test_retrieve_by_anonymous_user',

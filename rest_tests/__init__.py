@@ -92,6 +92,21 @@ class BaseAPITestCase(APITestCase):
 OPERATIONS = ('create', 'retrieve', 'update', 'delete', 'patch', 'list')
 
 
+class AllRestUsers():
+    def _decorator(self, operation):
+        def class_wrapper(cls):
+            for rest_user in cls.rest_users:
+                rest_user.allowed_operations.add(operation)
+            return cls
+        return class_wrapper
+
+    def __getattr__(self, name):
+        for operation in OPERATIONS:
+            if name == 'can_{operation}'.format(operation=operation):
+                return self._decorator(operation)
+        raise AttributeError
+
+
 class MetaRestTests(type):
 
     @property
@@ -120,11 +135,15 @@ class MetaRestTests(type):
             rest_users_names |= getattr(base, '_rest_users_names', set())
 
         for attr, value in attrs.items():
-            if value == RestUser:
+            if isinstance(value, type) and issubclass(value, RestUser):
                 rest_users_names.add(attr)
+            elif isinstance(value, RestUser):
+                if value.name is None:
+                    value.name = attr
+                rest_users.add(value)
 
         for rest_user_name in rest_users_names:
-            rest_user = RestUser(rest_user_name, cls)
+            rest_user = RestUser(rest_user_name)
             rest_users.add(rest_user)
             setattr(cls, rest_user_name, rest_user)
 
@@ -137,12 +156,15 @@ class MetaRestTests(type):
 
 
 class RestUser(object):
-    def __init__(self, name, cls):
+    def __init__(self, name=None, **kwargs):
         self.name = name
-        self.cls = cls
-
         self.user = None
         self.allowed_operations = set()
+
+        for operation in OPERATIONS:
+            kwarg = 'can_{}'.format(operation)
+            if kwargs.get(kwarg, False):
+                self.allowed_operations.add(operation)
 
     def __set__(self, obj, user):
         self.user = user
@@ -170,6 +192,8 @@ class RestUser(object):
 
 
 class RestTests(BaseAPITestCase, metaclass=MetaRestTests):
+
+    all_users = AllRestUsers()
     anonymous_user = RestUser
     output_status_create = status.HTTP_201_CREATED
 
