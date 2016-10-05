@@ -102,9 +102,8 @@ class BaseAPITestCase(APITestCase):
             status.HTTP_403_FORBIDDEN
         )
 
-    def assert_equal(self, response, expected_data):
-        pprint(dict(expected=expected_data))
-        assert compare(response.data, expected_data)
+    def assert_compare(self, data, expected_data):
+        assert compare(data, expected_data)
 
     url = ''
     url_detail = ''
@@ -261,7 +260,7 @@ class RestTests(BaseAPITestCase, metaclass=MetaRestTests):
         )
 
     def _test(self, rest_user=None, operation=''):
-        print("Operation '{operation}' for '{rest_user.name}' enabled.".format(
+        print("Operation '{operation}' for '{rest_user.name}' is enabled.".format(
             operation=operation, rest_user=rest_user)
         )
         if rest_user is not None:
@@ -274,11 +273,14 @@ class RestTests(BaseAPITestCase, metaclass=MetaRestTests):
         output_status = self._get_output_status(rest_user, operation)
 
         response = getattr(self, operation)(input_data)
+
+        pprint(dict(expected=output_data))
+
         if output_data is None:
             assert response.status_code == status.HTTP_204_NO_CONTENT
         else:
             assert response.status_code == output_status
-            self.assert_equal(response, output_data)
+            self.assert_compare(response.data, output_data)
 
     def _get_test(self, rest_user, operation):
         if rest_user.can(operation):
