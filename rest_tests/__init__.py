@@ -11,16 +11,20 @@ def compare(data, expected_data):
     if ... in expected_data:
         if expected_data[...] is ...:
             subset = True
+            del(expected_data[...])
         else:
-            raise Exception('Bad usage of ...')
+            raise TypeError('Bad usage of ...')
 
     compared_keys = []
 
-    for key, value in expected_data.items():
+    # add determinism
+    expected_data_items = sorted(expected_data.items())
+
+    for key, value in expected_data_items:
         if key is not ...:
             if value is ...:
                 if key not in data:
-                    raise Exception("Key '{key}' is not found in data.".format(key=key))
+                    raise KeyError("Key '{key}' is not found in data.".format(key=key))
                 else:
                     compared_keys.append(key)
             else:
@@ -30,16 +34,16 @@ def compare(data, expected_data):
                         compared_keys.append(key)
                     else:
                         if not data[key] == expected_data[key]:
-                            raise Exception("Item '' is not equal to ''.".format(key=key))
+                            raise ValueError("Item '' is not equal to ''.".format(key=key))
                         else:
                             compared_keys.append(key)
                 else:
-                    raise Exception("Key '{key}' is not found in data.".format(key=key))
+                    raise KeyError("Key '{key}' is not found in data.".format(key=key))
 
     if not subset:
-        if len(compared_keys) != len(expected_data):
-            missing_keys = expected_data.keys() - compared_keys
-            raise Exception("Missing keys in data: {missing_keys}.".format(missing_keys=missing_keys))
+        if len(compared_keys) != len(data):
+            missing_keys = data.keys() - compared_keys
+            raise ValueError("Missing keys in data: {missing_keys}.".format(missing_keys=missing_keys))
 
     return True
 

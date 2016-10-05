@@ -77,7 +77,9 @@ class BasicTestCase(unittest.TestCase):
         with self.assertRaises(Exception):
             compare(data, expected_data)
 
-    def test_basic_ellipsis(self):
+
+class ItemEllipsisTestCase(unittest.TestCase):
+    def test_basic(self):
         data = dict(
             a=1,
             b='2'
@@ -90,7 +92,7 @@ class BasicTestCase(unittest.TestCase):
 
         assert compare(data, expected_data)
 
-    def test_basic_ellipsis_false(self):
+    def test_basic_false(self):
         data = dict(
             a=1,
             b='2'
@@ -100,10 +102,10 @@ class BasicTestCase(unittest.TestCase):
             a=...
         )
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             compare(data, expected_data)
 
-    def test_deep_ellipsis(self):
+    def test_deep(self):
         data = dict(
             a=1,
             b=dict(
@@ -124,7 +126,7 @@ class BasicTestCase(unittest.TestCase):
         )
         assert compare(data, expected_data)
 
-    def test_deep_ellipsis_false(self):
+    def test_deep_false(self):
         data = dict(
             a=1,
             b=dict(
@@ -144,10 +146,10 @@ class BasicTestCase(unittest.TestCase):
             )
         )
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             compare(data, expected_data)
 
-    def test_missing_basic_ellipsis(self):
+    def test_missing_basic_false(self):
         data = dict(
             a=1,
             b='2'
@@ -156,10 +158,10 @@ class BasicTestCase(unittest.TestCase):
         expected_data = dict(
             a=...
         )
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             compare(data, expected_data)
 
-    def test_moreover_basic_ellipsis(self):
+    def test_moreover_basic_false(self):
         data = dict(
             a=1,
             b='2'
@@ -170,10 +172,10 @@ class BasicTestCase(unittest.TestCase):
             c='test'
         )
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             compare(data, expected_data)
 
-    def test_missing_deep_ellipsis(self):
+    def test_missing_deep_false(self):
         data = dict(
             a=1,
             b=dict(
@@ -191,10 +193,10 @@ class BasicTestCase(unittest.TestCase):
                 b=...,
             )
         )
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             compare(data, expected_data)
 
-    def test_moreover_deep_ellipsis(self):
+    def test_moreover_deep_false(self):
         data = dict(
             a=1,
             b=dict(
@@ -215,8 +217,137 @@ class BasicTestCase(unittest.TestCase):
             )
         )
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             compare(data, expected_data)
-            
+
+
+class CompleteEllipsisTestCase(unittest.TestCase):
+    def test_basic(self):
+        data = dict(
+            a=1,
+            b='2'
+        )
+
+        expected_data = {
+            ...: ...
+        }
+
+        assert compare(data, expected_data)
+
+    def test_basic_false(self):
+        data = dict(
+            a=1,
+            b='2'
+        )
+        expected_data = {
+            'b': 2,
+            ...: ...
+        }
+
+        with self.assertRaises(ValueError):
+            compare(data, expected_data)
+
+    def test_deep(self):
+        data = dict(
+            a=1,
+            b=dict(
+                b=dict(
+                    a='test'
+                ),
+                a=2,
+                c=''
+            )
+        )
+        expected_data = dict(
+            a=1,
+            b={
+                'a': 2,
+                ...: ...,
+                'c': ''
+            }
+        )
+        assert compare(data, expected_data)
+
+    def test_deep_false(self):
+        data = dict(
+            a=1,
+            b=dict(
+                b=dict(
+                    a='test'
+                ),
+                a=2,
+                c=''
+            )
+        )
+        expected_data = dict(
+            a=1,
+            b={
+                'a': 3,
+                ...: ...,
+                'c': ''
+            }
+        )
+
+        with self.assertRaises(ValueError):
+            compare(data, expected_data)
+
+    def test_moreover_basic_false(self):
+        data = dict(
+            a=1,
+            b='2'
+        )
+        expected_data = {
+            'b': 2,
+            ...: ...,
+            'c': 'test'
+        }
+
+        with self.assertRaises(ValueError):
+            compare(data, expected_data)
+
+    def test_missing_deep_false(self):
+        data = dict(
+            a=1,
+            b=dict(
+                b=dict(
+                    a='test'
+                ),
+                a=2,
+                c=''
+            )
+        )
+        expected_data = dict(
+            a=1,
+            b={
+                'a': 2,
+                ...: ...
+            }
+        )
+        assert compare(data, expected_data)
+
+    def test_moreover_deep_false(self):
+        data = dict(
+            a=1,
+            b=dict(
+                b=dict(
+                    a='test'
+                ),
+                a=2,
+                c=''
+            )
+        )
+        expected_data = dict(
+            a=1,
+            b={
+                'a': 3,
+                ...: ...,
+                'c': '',
+                'd': 'test'
+            }
+        )
+
+        with self.assertRaises(ValueError):
+            compare(data, expected_data)
+
 if __name__ == '__main__':
     unittest.main()
