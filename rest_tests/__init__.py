@@ -2,7 +2,7 @@ from functools import partial
 
 from rest_framework import status
 from rest_framework.test import APITestCase
-from pprint import pprint
+from pprint import pformat
 from collections import OrderedDict
 
 
@@ -18,30 +18,40 @@ def compare_lists(data, expected_data):
                 return True
 
             if next_value is ...:
-                raise TypeError('Consecutively usage of ... (Ellipsis) is not allowed in list.')
+                return False
+                # raise TypeError('Consecutively usage of ... (Ellipsis) is not allowed in list.')
 
             try:
                 while data_gen.send(None) != next_value:
                     pass
             except StopIteration:  # next expected item is not in data
-                raise ValueError("next expected item is not in data")
+                return False
+                # raise ValueError("next expected item is not in data")
         else:
             try:
                 data_item = data_gen.send(None)
             except StopIteration:  # there are more expected items
-                raise ValueError()
+                return False
+                # raise ValueError()
 
             if not compare(data_item, value):
-                raise ValueError()  # expected item is not in data
+                return False
+                # raise ValueError()  # expected item is not in data
 
-    more_data_items = []
     try:
-        more_data_items.append(data_gen.send(None))
+        data_gen.send(None)
     except StopIteration:
         return True
     else:
-        more_data_items += [item for item in data_gen]
-        raise ValueError("More items in data: {more_data_items}.".format(more_data_items=more_data_items))
+        return False
+    # more_data_items = []
+    # try:
+    #     more_data_items.append(data_gen.send(None))
+    # except StopIteration:
+    #     return True
+    # else:
+    #     more_data_items += [item for item in data_gen]
+    #     raise ValueError("More items in data: {more_data_items}.".format(more_data_items=more_data_items))
 
 
 def compare_dicts(data, expected_data):
@@ -53,7 +63,8 @@ def compare_dicts(data, expected_data):
             subset = True
             del(expected_data[...])
         else:
-            raise TypeError('Bad usage of ... (Ellipsis).')
+            return False
+            # raise TypeError('Bad usage of ... (Ellipsis).')
 
     compared_keys = []
     expected_data_items = sorted(expected_data.items())  # add determinism
@@ -62,28 +73,32 @@ def compare_dicts(data, expected_data):
         if key is not ...:
             if value is ...:
                 if key not in data:
-                    raise KeyError("Key '{key}' is not found in data.".format(key=key))
+                    return False
+                    # raise KeyError("Key '{key}' is not found in data.".format(key=key))
                 else:
                     compared_keys.append(key)
             else:
                 if key in data:
                     if not compare(data[key], expected_data[key]):
-                        raise ValueError(
-                            "For item '{key}' is expected '{expected_item}' but gets '{item}'.".format(
-                                key=key,
-                                expected_item=expected_data[key],
-                                item=data[key]
-                            )
-                        )
+                        return False
+                        # raise ValueError(
+                        #     "For item '{key}' is expected '{expected_item}' but gets '{item}'.".format(
+                        #         key=key,
+                        #         expected_item=expected_data[key],
+                        #         item=data[key]
+                        #     )
+                        # )
                     else:
                         compared_keys.append(key)
                 else:
-                    raise KeyError("Key '{key}' is not found in data.".format(key=key))
+                    return False
+                    # raise KeyError("Key '{key}' is not found in data.".format(key=key))
 
     if not subset:
         if len(compared_keys) != len(data):
-            more_keys = data.keys() - compared_keys
-            raise ValueError("More keys in data: {more_keys}.".format(more_keys=more_keys))
+            return False
+            # more_keys = data.keys() - compared_keys
+            # raise ValueError("More keys in data: {more_keys}.".format(more_keys=more_keys))
 
     return True
 
@@ -93,7 +108,8 @@ def compare(data, expected_data):
     expected_data_type = type(expected_data)
 
     if expected_data_type != type(data):
-        raise TypeError('Different types.')  # TODO
+        return False
+        # raise TypeError('Different types.')  # TODO
 
     if expected_data_type == list:
         return compare_lists(data, expected_data)
@@ -101,7 +117,6 @@ def compare(data, expected_data):
         return compare_dicts(data, expected_data)
     else:
         return data == expected_data
-
 
 
 class BaseAPITestCase(APITestCase):
@@ -122,17 +137,17 @@ class BaseAPITestCase(APITestCase):
 
     def _request(self, method, url, data=None):
         response = getattr(self.client, method)(url, data=data, format='json')
-        pprint(dict(
-            request=dict(
-                method=method,
-                url=url,
-                input_data=data
-            ),
-            response=dict(
-                status_code=response.status_code,
-                output_data=self._data_format(response.data) if hasattr(response, 'data') else None
-            )
-        ))
+        # pprint(dict(
+        #     request=dict(
+        #         method=method,
+        #         url=url,
+        #         input_data=data
+        #     ),
+        #     response=dict(
+        #         status_code=response.status_code,
+        #         output_data=self._data_format(response.data) if hasattr(response, 'data') else None
+        #     )
+        # ))
         return response
 
     def _get(self, url, data=None):
@@ -151,15 +166,30 @@ class BaseAPITestCase(APITestCase):
         return self._request('patch', url, data=data)
 
     # assert methods
-    def assert_disabled(self, response):
-        assert response.status_code in (
+    def assert_disabled(self, status_code):
+        msg = pformat(
+            dict(
+                response_status_code=status_code,
+                expected_status_codes=(
+                    status.HTTP_404_NOT_FOUND,
+                    status.HTTP_405_METHOD_NOT_ALLOWED,
+                    status.HTTP_403_FORBIDDEN
+                )
+            )
+        )
+        assert status_code in (
             status.HTTP_404_NOT_FOUND,
             status.HTTP_405_METHOD_NOT_ALLOWED,
             status.HTTP_403_FORBIDDEN
-        )
-
+        ), msg
     def assert_compare(self, data, expected_data):
-        assert compare(data, expected_data)
+        msg = pformat(
+            dict(
+                response_data=data,
+                expected_data=expected_data
+            )
+        )
+        assert compare(data, expected_data), msg
 
     url = ''
     url_detail = ''
@@ -330,8 +360,6 @@ class RestTests(BaseAPITestCase, metaclass=MetaRestTests):
 
         response = getattr(self, operation)(input_data)
 
-        pprint(dict(expected=output_data))
-
         if output_data is None:
             assert response.status_code == status.HTTP_204_NO_CONTENT
         else:
@@ -361,7 +389,7 @@ class RestTests(BaseAPITestCase, metaclass=MetaRestTests):
 
         for input_data in input_data_list:
             response = getattr(self, operation)(input_data)
-            self.assert_disabled(response)
+            self.assert_disabled(response.status_code)
 
     def __getattr__(self, attr_name):
         for test_name, rest_user, operation in self.__class__.test_names:
