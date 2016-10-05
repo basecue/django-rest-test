@@ -13,7 +13,7 @@ def compare(data, expected_data):
             subset = True
             del(expected_data[...])
         else:
-            raise TypeError('Bad usage of ...')
+            raise TypeError('Bad usage of ... (Ellipsis).')
 
     compared_keys = []
 
@@ -34,7 +34,13 @@ def compare(data, expected_data):
                         compared_keys.append(key)
                     else:
                         if not data[key] == expected_data[key]:
-                            raise ValueError("Item '' is not equal to ''.".format(key=key))
+                            raise ValueError(
+                                "For item '{key}' is expected '{expected_item}' but gets '{item}'.".format(
+                                    key=key,
+                                    expected_item=expected_data[key],
+                                    item=data[key]
+                                )
+                            )
                         else:
                             compared_keys.append(key)
                 else:
