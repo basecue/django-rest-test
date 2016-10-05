@@ -6,6 +6,48 @@ from pprint import pprint
 from collections import OrderedDict
 
 
+def compare(data, expected_data):
+    subset = False
+    if ... in expected_data:
+        if expected_data[...] is ...:
+            subset = True
+            del(expected_data[...])
+        else:
+            raise TypeError('Bad usage of ...')
+
+    compared_keys = []
+
+    # add determinism
+    expected_data_items = sorted(expected_data.items())
+
+    for key, value in expected_data_items:
+        if key is not ...:
+            if value is ...:
+                if key not in data:
+                    raise KeyError("Key '{key}' is not found in data.".format(key=key))
+                else:
+                    compared_keys.append(key)
+            else:
+                if key in data:
+                    if type(data[key]) == dict and type(expected_data[key]) == dict:
+                        compare(data[key], expected_data[key])
+                        compared_keys.append(key)
+                    else:
+                        if not data[key] == expected_data[key]:
+                            raise ValueError("Item '' is not equal to ''.".format(key=key))
+                        else:
+                            compared_keys.append(key)
+                else:
+                    raise KeyError("Key '{key}' is not found in data.".format(key=key))
+
+    if not subset:
+        if len(compared_keys) != len(data):
+            missing_keys = data.keys() - compared_keys
+            raise ValueError("Missing keys in data: {missing_keys}.".format(missing_keys=missing_keys))
+
+    return True
+
+
 class BaseAPITestCase(APITestCase):
     def _data_format(self, data):
         if isinstance(data, list):
@@ -60,9 +102,9 @@ class BaseAPITestCase(APITestCase):
             status.HTTP_403_FORBIDDEN
         )
 
-    def assert_equal(self, response, data):
-        pprint(dict(expected=data))
-        assert response.data == data
+    def assert_equal(self, response, expected_data):
+        pprint(dict(expected=expected_data))
+        assert compare(response.data, expected_data)
 
     url = ''
     url_detail = ''
