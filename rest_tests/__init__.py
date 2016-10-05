@@ -6,8 +6,48 @@ from pprint import pprint
 from collections import OrderedDict
 
 
-def compare(data, expected_data):
+def compare_lists(data, expected_data):
+    data_gen = (item for item in data)
+    expected_data_gen = (item for item in expected_data)
+
+    for value in expected_data_gen:
+        if value is ...:
+            try:
+                next_value = expected_data_gen.send(None)
+            except StopIteration:  # last item is ellipsis
+                return True
+
+            if next_value is ...:
+                raise TypeError('Consecutively usage of ... (Ellipsis) is not allowed in list.')
+
+            try:
+                while data_gen.send(None) != next_value:
+                    pass
+            except StopIteration:  # next expected item is not in data
+                raise ValueError("next expected item is not in data")
+        else:
+            try:
+                data_item = data_gen.send(None)
+            except StopIteration:  # there are more expected items
+                raise ValueError()
+
+            if not compare(data_item, value):
+                raise ValueError()  # expected item is not in data
+
+    more_data_items = []
+    try:
+        more_data_items.append(data_gen.send(None))
+    except StopIteration:
+        return True
+    else:
+        more_data_items += [item for item in data_gen]
+        raise ValueError("More items in data: {more_data_items}.".format(more_data_items=more_data_items))
+
+
+def compare_dicts(data, expected_data):
     subset = False
+
+    # subset
     if ... in expected_data:
         if expected_data[...] is ...:
             subset = True
@@ -16,9 +56,7 @@ def compare(data, expected_data):
             raise TypeError('Bad usage of ... (Ellipsis).')
 
     compared_keys = []
-
-    # add determinism
-    expected_data_items = sorted(expected_data.items())
+    expected_data_items = sorted(expected_data.items())  # add determinism
 
     for key, value in expected_data_items:
         if key is not ...:
@@ -29,29 +67,41 @@ def compare(data, expected_data):
                     compared_keys.append(key)
             else:
                 if key in data:
-                    if type(data[key]) == dict and type(expected_data[key]) == dict:
-                        compare(data[key], expected_data[key])
-                        compared_keys.append(key)
-                    else:
-                        if not data[key] == expected_data[key]:
-                            raise ValueError(
-                                "For item '{key}' is expected '{expected_item}' but gets '{item}'.".format(
-                                    key=key,
-                                    expected_item=expected_data[key],
-                                    item=data[key]
-                                )
+                    if not compare(data[key], expected_data[key]):
+                        raise ValueError(
+                            "For item '{key}' is expected '{expected_item}' but gets '{item}'.".format(
+                                key=key,
+                                expected_item=expected_data[key],
+                                item=data[key]
                             )
-                        else:
-                            compared_keys.append(key)
+                        )
+                    else:
+                        compared_keys.append(key)
                 else:
                     raise KeyError("Key '{key}' is not found in data.".format(key=key))
 
     if not subset:
         if len(compared_keys) != len(data):
-            missing_keys = data.keys() - compared_keys
-            raise ValueError("Missing keys in data: {missing_keys}.".format(missing_keys=missing_keys))
+            more_keys = data.keys() - compared_keys
+            raise ValueError("More keys in data: {more_keys}.".format(more_keys=more_keys))
 
     return True
+
+
+def compare(data, expected_data):
+
+    expected_data_type = type(expected_data)
+
+    if expected_data_type != type(data):
+        raise TypeError('Different types.')  # TODO
+
+    if expected_data_type == list:
+        return compare_lists(data, expected_data)
+    elif expected_data_type == dict:
+        return compare_dicts(data, expected_data)
+    else:
+        return data == expected_data
+
 
 
 class BaseAPITestCase(APITestCase):
