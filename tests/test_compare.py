@@ -539,7 +539,7 @@ class ListEllipsisTestCase(unittest.TestCase):
         ]
         self.assertFalse(compare(data, expected_data))
 
-    def test_multiple_in_false(self):
+    def test_multiple_in_optional(self):
         data = [
             1,
             2,
@@ -556,7 +556,21 @@ class ListEllipsisTestCase(unittest.TestCase):
             3,
             ...
         ]
-        self.assertFalse(compare(data, expected_data))
+        assert compare(data, expected_data)
+
+    def test_multiple_in_optional_between(self):
+        data = [
+            2,
+            3,
+        ]
+        expected_data = [
+            ...,
+            2,
+            ...,
+            3,
+            ...
+        ]
+        assert compare(data, expected_data)
 
     def test_bad_usage(self):
         data = [
