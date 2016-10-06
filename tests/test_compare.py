@@ -214,6 +214,16 @@ class ItemEllipsisTestCase(unittest.TestCase):
 
 
 class DictEllipsisTestCase(unittest.TestCase):
+    def test_empty(self):
+        data = dict(
+        )
+
+        expected_data = {
+            ...: ...
+        }
+
+        assert compare(data, expected_data)
+
     def test_basic(self):
         data = dict(
             a=1,
@@ -222,6 +232,20 @@ class DictEllipsisTestCase(unittest.TestCase):
 
         expected_data = {
             ...: ...
+        }
+
+        assert compare(data, expected_data)
+
+    def test_basic_more(self):
+        data = {
+            'a': 1,
+            'b': '2',
+            'c': 3
+        }
+
+        expected_data = {
+            ...: ...,
+            'b': '2'
         }
 
         assert compare(data, expected_data)
@@ -438,10 +462,22 @@ class ListTestCase(unittest.TestCase):
 
 
 class ListEllipsisTestCase(unittest.TestCase):
+
+    def test_empty(self):
+        data = [
+            '1',
+            {},
+            3
+        ]
+        expected_data = [
+            ...
+        ]
+        assert compare(data, expected_data)
+
     def test_start(self):
         data = [
-            1,
-            2,
+            '1',
+            {},
             3
         ]
         expected_data = [
@@ -452,10 +488,10 @@ class ListEllipsisTestCase(unittest.TestCase):
 
     def test_multiple(self):
         data = [
-            1,
+            '1',
             2,
             3,
-            4,
+            '4',
             5
         ]
         expected_data = [
@@ -589,6 +625,52 @@ class ListEllipsisTestCase(unittest.TestCase):
         ]
         with self.assertRaises(TypeError):
             compare(data, expected_data)
+
+    def test_one(self):
+        data = [1]
+        expected_data = [..., 1, ...]
+        assert compare(data, expected_data)
+
+
+class CombinationEllipsisTestCase(unittest.TestCase):
+
+    def test_combination(self):
+        data = [
+            {
+                'foo': 1,
+                'bar': 2,
+                'zoo': 3,
+            }
+        ]
+
+        expected_data = [
+            ...,
+            {
+                ...: ...,
+                'bar': 2
+            },
+            ...
+        ]
+
+
+        assert compare(data, expected_data)
+
+    def test_combination_empty(self):
+        data = [
+            {
+            }
+        ]
+
+        expected_data = [
+            ...,
+            {
+                ...: ...,
+            },
+            ...
+        ]
+
+        assert compare(data, expected_data)
+
 
 if __name__ == '__main__':
     unittest.main()
