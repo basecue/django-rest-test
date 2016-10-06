@@ -14,44 +14,38 @@ def compare_lists(data, expected_data):
         if value is ...:
             try:
                 next_value = expected_data_gen.send(None)
-            except StopIteration:  # last item is ellipsis
+            except StopIteration:
+                # last item is ellipsis
                 return True
 
             if next_value is ...:
-                return False
-                # raise TypeError('Consecutively usage of ... (Ellipsis) is not allowed in list.')
+                raise TypeError('Consecutively usage of ... (Ellipsis) is not allowed in list.')
 
             try:
                 while data_gen.send(None) != next_value:
                     pass
-            except StopIteration:  # next expected item is not in data
+            except StopIteration:
+                # next expected item is not in data
                 return False
-                # raise ValueError("next expected item is not in data")
+
         else:
             try:
                 data_item = data_gen.send(None)
-            except StopIteration:  # there are more expected items
+            except StopIteration:
+                # there are more expected items
                 return False
-                # raise ValueError()
 
             if not compare(data_item, value):
+                # expected item is not in data
                 return False
-                # raise ValueError()  # expected item is not in data
 
     try:
         data_gen.send(None)
     except StopIteration:
         return True
     else:
+        # More items in data
         return False
-    # more_data_items = []
-    # try:
-    #     more_data_items.append(data_gen.send(None))
-    # except StopIteration:
-    #     return True
-    # else:
-    #     more_data_items += [item for item in data_gen]
-    #     raise ValueError("More items in data: {more_data_items}.".format(more_data_items=more_data_items))
 
 
 def compare_dicts(data, expected_data):
@@ -63,8 +57,7 @@ def compare_dicts(data, expected_data):
             subset = True
             del(expected_data[...])
         else:
-            return False
-            # raise TypeError('Bad usage of ... (Ellipsis).')
+            raise TypeError('Bad usage of ... (Ellipsis).')
 
     compared_keys = []
     expected_data_items = sorted(expected_data.items())  # add determinism
@@ -73,32 +66,27 @@ def compare_dicts(data, expected_data):
         if key is not ...:
             if value is ...:
                 if key not in data:
+                    # Key is not found in data
                     return False
-                    # raise KeyError("Key '{key}' is not found in data.".format(key=key))
+
                 else:
                     compared_keys.append(key)
             else:
                 if key in data:
                     if not compare(data[key], expected_data[key]):
+                        # values are not the same
                         return False
-                        # raise ValueError(
-                        #     "For item '{key}' is expected '{expected_item}' but gets '{item}'.".format(
-                        #         key=key,
-                        #         expected_item=expected_data[key],
-                        #         item=data[key]
-                        #     )
-                        # )
+
                     else:
                         compared_keys.append(key)
                 else:
+                    # Key is not found in data
                     return False
-                    # raise KeyError("Key '{key}' is not found in data.".format(key=key))
 
     if not subset:
         if len(compared_keys) != len(data):
+            # More items in data
             return False
-            # more_keys = data.keys() - compared_keys
-            # raise ValueError("More keys in data: {more_keys}.".format(more_keys=more_keys))
 
     return True
 
@@ -108,8 +96,8 @@ def compare(data, expected_data):
     expected_data_type = type(expected_data)
 
     if expected_data_type != type(data):
+        # different types
         return False
-        # raise TypeError('Different types.')  # TODO
 
     if expected_data_type == list:
         return compare_lists(data, expected_data)
@@ -182,6 +170,7 @@ class BaseAPITestCase(APITestCase):
             status.HTTP_405_METHOD_NOT_ALLOWED,
             status.HTTP_403_FORBIDDEN
         ), msg
+
     def assert_compare(self, data, expected_data):
         msg = pformat(
             dict(
@@ -364,6 +353,7 @@ class RestTests(BaseAPITestCase, metaclass=MetaRestTests):
             assert response.status_code == status.HTTP_204_NO_CONTENT
         else:
             assert response.status_code == output_status
+            # TODO - maybe: if hasattr(response, 'data') else None
             self.assert_compare(response.data, output_data)
 
     def _get_test(self, rest_user, operation):
