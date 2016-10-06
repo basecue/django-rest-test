@@ -57,14 +57,15 @@ def compare_dicts(data, expected_data):
     if ... in expected_data:
         if expected_data[...] is ...:
             subset = True
-            del(expected_data[...])
         else:
             raise TypeError('Bad usage of ... (Ellipsis).')
 
     compared_keys = []
-    expected_data_items = sorted(expected_data.items())  # add determinism
 
-    for key, value in expected_data_items:
+    for key, value in expected_data.items():
+        if key is ...:
+            continue
+
         if value is ...:
             if key not in data:
                 # Key is not found in data
