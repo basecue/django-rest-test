@@ -5,6 +5,8 @@ from rest_framework.test import APITestCase
 from pprint import pformat
 from collections import OrderedDict
 
+from rest_framework.utils.serializer_helpers import ReturnList
+
 
 def compare_lists(data, expected_data):
     data_gen = (item for item in data)
@@ -108,7 +110,7 @@ def compare(data, expected_data):
 
 
 def convert_data(data):
-    if type(data) == list:
+    if type(data) == list or isinstance(ReturnList):
         return [convert_data(item) for item in data]
     elif type(data) == dict or isinstance(data, OrderedDict):
         return {key: convert_data(value) for key, value in data.items()}
