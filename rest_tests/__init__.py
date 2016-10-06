@@ -5,6 +5,8 @@ from rest_framework.test import APITestCase
 from pprint import pformat
 from collections import OrderedDict
 
+from rest_framework.utils.serializer_helpers import ReturnList
+
 
 def compare_lists(data, expected_data):
     data_gen = (item for item in data)
@@ -108,7 +110,7 @@ def compare(data, expected_data):
 
 
 def convert_data(data):
-    if type(data) == list:
+    if type(data) == list or isinstance(ReturnList):
         return [convert_data(item) for item in data]
     elif type(data) == dict or isinstance(data, OrderedDict):
         return {key: convert_data(value) for key, value in data.items()}
@@ -119,17 +121,6 @@ def convert_data(data):
 class BaseAPITestCase(APITestCase):
     def _request(self, method, url, data=None):
         response = getattr(self.client, method)(url, data=data, format='json')
-        # pprint(dict(
-        #     request=dict(
-        #         method=method,
-        #         url=url,
-        #         input_data=data
-        #     ),
-        #     response=dict(
-        #         status_code=response.status_code,
-        #         output_data=self._data_format(response.data) if hasattr(response, 'data') else None
-        #     )
-        # ))
         return response
 
     def _get(self, url, data=None):
