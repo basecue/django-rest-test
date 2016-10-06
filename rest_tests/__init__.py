@@ -119,17 +119,6 @@ def convert_data(data):
 class BaseAPITestCase(APITestCase):
     def _request(self, method, url, data=None):
         response = getattr(self.client, method)(url, data=data, format='json')
-        # pprint(dict(
-        #     request=dict(
-        #         method=method,
-        #         url=url,
-        #         input_data=data
-        #     ),
-        #     response=dict(
-        #         status_code=response.status_code,
-        #         output_data=self._data_format(response.data) if hasattr(response, 'data') else None
-        #     )
-        # ))
         return response
 
     def _get(self, url, data=None):
