@@ -2,12 +2,56 @@ from functools import partial
 
 from rest_framework import status
 from rest_framework.test import APITestCase
-from pprint import pprint
+from pprint import pformat
 from collections import OrderedDict
 
 
-def compare(data, expected_data):
+def compare_lists(data, expected_data):
+    data_gen = (item for item in data)
+    expected_data_gen = (item for item in expected_data)
+
+    for value in expected_data_gen:
+        if value is ...:
+            try:
+                next_value = expected_data_gen.send(None)
+            except StopIteration:
+                # last item is ellipsis
+                return True
+
+            if next_value is ...:
+                raise TypeError('Consecutively usage of ... (Ellipsis) is not allowed in list.')
+
+            try:
+                while data_gen.send(None) != next_value:
+                    pass
+            except StopIteration:
+                # next expected item is not in data
+                return False
+
+        else:
+            try:
+                data_item = data_gen.send(None)
+            except StopIteration:
+                # there are more expected items
+                return False
+
+            if not compare(data_item, value):
+                # expected item is not in data
+                return False
+
+    try:
+        data_gen.send(None)
+    except StopIteration:
+        return True
+    else:
+        # More items in data
+        return False
+
+
+def compare_dicts(data, expected_data):
     subset = False
+
+    # subset
     if ... in expected_data:
         if expected_data[...] is ...:
             subset = True
@@ -16,42 +60,51 @@ def compare(data, expected_data):
             raise TypeError('Bad usage of ... (Ellipsis).')
 
     compared_keys = []
-
-    # add determinism
-    expected_data_items = sorted(expected_data.items())
+    expected_data_items = sorted(expected_data.items())  # add determinism
 
     for key, value in expected_data_items:
         if key is not ...:
             if value is ...:
                 if key not in data:
-                    raise KeyError("Key '{key}' is not found in data.".format(key=key))
+                    # Key is not found in data
+                    return False
+
                 else:
                     compared_keys.append(key)
             else:
                 if key in data:
-                    if type(data[key]) == dict and type(expected_data[key]) == dict:
-                        compare(data[key], expected_data[key])
-                        compared_keys.append(key)
+                    if not compare(data[key], expected_data[key]):
+                        # values are not the same
+                        return False
+
                     else:
-                        if not data[key] == expected_data[key]:
-                            raise ValueError(
-                                "For item '{key}' is expected '{expected_item}' but gets '{item}'.".format(
-                                    key=key,
-                                    expected_item=expected_data[key],
-                                    item=data[key]
-                                )
-                            )
-                        else:
-                            compared_keys.append(key)
+                        compared_keys.append(key)
                 else:
-                    raise KeyError("Key '{key}' is not found in data.".format(key=key))
+                    # Key is not found in data
+                    return False
 
     if not subset:
         if len(compared_keys) != len(data):
-            missing_keys = data.keys() - compared_keys
-            raise ValueError("Missing keys in data: {missing_keys}.".format(missing_keys=missing_keys))
+            # More items in data
+            return False
 
     return True
+
+
+def compare(data, expected_data):
+
+    expected_data_type = type(expected_data)
+
+    if expected_data_type != type(data):
+        # different types
+        return False
+
+    if expected_data_type == list:
+        return compare_lists(data, expected_data)
+    elif expected_data_type == dict:
+        return compare_dicts(data, expected_data)
+    else:
+        return data == expected_data
 
 
 class BaseAPITestCase(APITestCase):
@@ -72,17 +125,17 @@ class BaseAPITestCase(APITestCase):
 
     def _request(self, method, url, data=None):
         response = getattr(self.client, method)(url, data=data, format='json')
-        pprint(dict(
-            request=dict(
-                method=method,
-                url=url,
-                input_data=data
-            ),
-            response=dict(
-                status_code=response.status_code,
-                output_data=self._data_format(response.data) if hasattr(response, 'data') else None
-            )
-        ))
+        # pprint(dict(
+        #     request=dict(
+        #         method=method,
+        #         url=url,
+        #         input_data=data
+        #     ),
+        #     response=dict(
+        #         status_code=response.status_code,
+        #         output_data=self._data_format(response.data) if hasattr(response, 'data') else None
+        #     )
+        # ))
         return response
 
     def _get(self, url, data=None):
@@ -101,15 +154,31 @@ class BaseAPITestCase(APITestCase):
         return self._request('patch', url, data=data)
 
     # assert methods
-    def assert_disabled(self, response):
-        assert response.status_code in (
+    def assert_disabled(self, status_code):
+        msg = pformat(
+            dict(
+                response_status_code=status_code,
+                expected_status_codes=(
+                    status.HTTP_404_NOT_FOUND,
+                    status.HTTP_405_METHOD_NOT_ALLOWED,
+                    status.HTTP_403_FORBIDDEN
+                )
+            )
+        )
+        assert status_code in (
             status.HTTP_404_NOT_FOUND,
             status.HTTP_405_METHOD_NOT_ALLOWED,
             status.HTTP_403_FORBIDDEN
-        )
+        ), msg
 
     def assert_compare(self, data, expected_data):
-        assert compare(data, expected_data)
+        msg = pformat(
+            dict(
+                response_data=data,
+                expected_data=expected_data
+            )
+        )
+        assert compare(data, expected_data), msg
 
     url = ''
     url_detail = ''
@@ -280,12 +349,11 @@ class RestTests(BaseAPITestCase, metaclass=MetaRestTests):
 
         response = getattr(self, operation)(input_data)
 
-        pprint(dict(expected=output_data))
-
         if output_data is None:
             assert response.status_code == status.HTTP_204_NO_CONTENT
         else:
             assert response.status_code == output_status
+            # TODO - maybe: if hasattr(response, 'data') else None
             self.assert_compare(response.data, output_data)
 
     def _get_test(self, rest_user, operation):
@@ -311,7 +379,7 @@ class RestTests(BaseAPITestCase, metaclass=MetaRestTests):
 
         for input_data in input_data_list:
             response = getattr(self, operation)(input_data)
-            self.assert_disabled(response)
+            self.assert_disabled(response.status_code)
 
     def __getattr__(self, attr_name):
         for test_name, rest_user, operation in self.__class__.test_names:
