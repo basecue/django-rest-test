@@ -24,7 +24,7 @@ def compare_lists(data, expected_data):
                 raise TypeError('Consecutively usage of ... (Ellipsis) is not allowed in list.')
 
             try:
-                while data_gen.send(None) != next_value:
+                while not compare(data_gen.send(None), next_value):
                     pass
             except StopIteration:
                 # next expected item is not in data
@@ -65,25 +65,24 @@ def compare_dicts(data, expected_data):
     expected_data_items = sorted(expected_data.items())  # add determinism
 
     for key, value in expected_data_items:
-        if key is not ...:
-            if value is ...:
-                if key not in data:
-                    # Key is not found in data
-                    return False
+        if value is ...:
+            if key not in data:
+                # Key is not found in data
+                return False
 
-                else:
-                    compared_keys.append(key)
             else:
-                if key in data:
-                    if not compare(data[key], expected_data[key]):
-                        # values are not the same
-                        return False
-
-                    else:
-                        compared_keys.append(key)
+                compared_keys.append(key)
+        else:
+            if key in data:
+                if compare(data[key], expected_data[key]):
+                    compared_keys.append(key)
                 else:
-                    # Key is not found in data
+                    # values are not the same
                     return False
+
+            else:
+                # Key is not found in data
+                return False
 
     if not subset:
         if len(compared_keys) != len(data):
