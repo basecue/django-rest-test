@@ -33,10 +33,9 @@ class AnonymousReadOnlyTestCase(RestTests):
     ]
 ```
         
-This example creates six tests: 
- * two with expected granted permissions for retrieve and list views, which check outputs against to `output_retrieve` and `output_list` structures.
- * and four "smoke tests" for create, update, delete and patch views, which expect returned 
- `HTTP_404_NOT_FOUND`, `HTTP_405_METHOD_NOT_ALLOWED` or `HTTP_403_FORBIDDEN` status.
+The example creates six tests: 
+ * __two__ for retrieve and list views which check outputs against to defined `output_retrieve` and `output_list` structures.
+ * and __four__ "smoke tests" for create, update, delete and patch views which expect `HTTP_404_NOT_FOUND`, `HTTP_405_METHOD_NOT_ALLOWED` or `HTTP_403_FORBIDDEN` status.
 
  
 ## tests for more users
@@ -97,7 +96,7 @@ This seems pretty big, but it creates **twelve** tests in one shot. Six tests fo
 
 ## Wildcards and uncertainity
 
-You can define expected output data with some level of uncertainty via wildcard. Python offers for it Ellipsis object, which is represented by syntax construct `...`. 
+You can define expected output data with some level of uncertainty via wildcard. Python offers for it the Ellipsis object, which is represented by syntax construct `...`. 
 
 ### `...` in list
 
