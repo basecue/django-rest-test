@@ -211,7 +211,7 @@ output_retrieve = {
 This means that the value of key 'name' is 'test_name', key 'description' is `str` and key ''some_specific_data' is `dict`.
 
 
-## Realistic example with combination of definition
+## Realistic example with combination of ellipsis and typed wildcards
 
 You can combine everything together:
 
