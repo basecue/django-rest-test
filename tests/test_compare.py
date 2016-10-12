@@ -672,5 +672,132 @@ class CombinationEllipsisTestCase(unittest.TestCase):
         assert compare(data, expected_data)
 
 
+class TypeTestCase(unittest.TestCase):
+
+    def test_list(self):
+        data = [
+            '1',
+            {},
+            3
+        ]
+        expected_data = list
+        assert compare(data, expected_data)
+
+    def test_dict(self):
+        data = {
+            '1': 2,
+            2: 3,
+            3: 2
+        }
+        expected_data = dict
+        assert compare(data, expected_data)
+
+    def test_list_with_dict(self):
+        data = [
+            '1',
+            {'test': 'test_value'},
+            3
+        ]
+        expected_data = [
+            '1',
+            dict,
+            3
+        ]
+        assert compare(data, expected_data)
+
+    def test_dict_with_list(self):
+        data = {
+            '1': 2,
+            'test_key': [1, 2, 'u'],
+            3: 2
+        }
+        expected_data = {
+            '1': 2,
+            'test_key': list,
+            3: 2
+        }
+        assert compare(data, expected_data)
+
+    def test_different_types_in_list(self):
+        data = [
+            '1',
+            {},
+            3
+        ]
+        expected_data = [
+            str,
+            dict,
+            int
+        ]
+        assert compare(data, expected_data)
+
+    def test_different_types_in_dict(self):
+        data = {
+            '1': 2,
+            2: 'test',
+            3: [1, 2, 3]
+        }
+        expected_data = {
+            '1': int,
+            2: str,
+            3: list
+        }
+        assert compare(data, expected_data)
+
+    def test_different_types_in_dict_in_deep(self):
+        data = [
+            '1',
+            {
+                '1': 2,
+                2: 'test',
+                3: [1, 2, 3]
+            },
+            3
+        ]
+        expected_data = [
+            '1',
+            {
+                '1': int,
+                2: str,
+                3: list
+            },
+            3
+        ]
+        assert compare(data, expected_data)
+
+
+class CombinationTypeEllipsisTestCase(unittest.TestCase):
+
+    def test_combination(self):
+        data = [
+            {
+                'foo': 1,
+                'bar': 2,
+                'zoo': 3,
+            },
+            {
+                'test_foo': '1',
+                'test_bar': 2,
+                'test_zoo': [1, 2, 3],
+            },
+        ]
+
+        expected_data = [
+            ...,
+            {
+                ...: ...,
+                'bar': int
+            },
+            ...,
+            {
+                'test_foo': str,
+                'test_bar': 2,
+                'test_zoo': list,
+            }
+        ]
+
+        assert compare(data, expected_data)
+
+
 if __name__ == '__main__':
     unittest.main()

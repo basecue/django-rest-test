@@ -95,6 +95,10 @@ def compare_dicts(data, expected_data):
 
 def compare(data, expected_data):
 
+    # if expected_data is type, only test if type of data is the same
+    if isinstance(expected_data, type) and type(data) == expected_data:
+        return True
+
     expected_data_type = type(expected_data)
 
     if expected_data_type != type(data):
@@ -245,7 +249,7 @@ class MetaRestTests(type):
                 rest_users.add(value)
 
         for rest_user_name in rest_users_names:
-            rest_user = RestUser(rest_user_name)
+            rest_user = RestUser(name=rest_user_name)
             rest_users.add(rest_user)
             setattr(cls, rest_user_name, rest_user)
 
@@ -258,9 +262,9 @@ class MetaRestTests(type):
 
 
 class RestUser(object):
-    def __init__(self, name=None, **kwargs):
+    def __init__(self, name=None, user=None, **kwargs):
         self.name = name
-        self.user = None
+        self.user = user
         self.allowed_operations = set()
 
         for operation in OPERATIONS:
