@@ -92,13 +92,13 @@ class MultiUserTestCase(RestTests):
     }
 ```
         
-This seems pretty big, but it creates **twelve** tests in one shot. Six tests for anonymous user same as first example and six for logged user.
+This seems pretty big, but it creates **twelve** tests in one shot. Six tests for anonymous user (same as first example) and six for logged user.
 
 ## Wildcards and uncertainity
 
 You can define expected output data with some level of uncertainty via wildcard. Python offers for it the Ellipsis object, which is represented by syntax construct `...`. 
 
-### `...` in list
+### Ellipsis in list
 
 `...` in list means zero or more objects of any type.
 
@@ -122,7 +122,7 @@ output_list = [
 
 This means that the specific dict object is in the end of the `ouptut_list`.
 
-### `...` in dict
+### Ellipsis in dict
 
 `...` used as a value with specific key means that value could be anything.
 
