@@ -213,7 +213,7 @@ class AllRestUsers():
         raise AttributeError
 
 
-class MetaRestTest(type):
+class MetaRestTestCase(type):
 
     @property
     def rest_users(self):
@@ -297,7 +297,7 @@ class RestUser(object):
         return operation in self.allowed_operations
 
 
-class RestTest(BaseAPITestCase, metaclass=MetaRestTest):
+class RestTestCase(BaseAPITestCase, metaclass=MetaRestTestCase):
 
     all_users = AllRestUsers()
     anonymous_user = RestUser

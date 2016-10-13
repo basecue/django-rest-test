@@ -6,9 +6,9 @@ class BasicTestCase(unittest.TestCase):
         return [name for name in dir(cls) if name.startswith('test_')]
 
     def test_anonymous(self):
-        from rest_test import RestTest
+        from rest_test import RestTestCase
 
-        class AnonymousTest(RestTest):
+        class AnonymousTest(RestTestCase):
             pass
 
         self.assertCountEqual(
@@ -24,9 +24,9 @@ class BasicTestCase(unittest.TestCase):
         )
 
     def test_user(self):
-        from rest_test import RestTest, RestUser
+        from rest_test import RestTestCase, RestUser
 
-        class UserTest(RestTest):
+        class UserTest(RestTestCase):
             another_user = RestUser
 
         self.assertCountEqual(
@@ -49,9 +49,9 @@ class BasicTestCase(unittest.TestCase):
         )
 
     def test_user_inheritance(self):
-        from rest_test import RestTest, RestUser
+        from rest_test import RestTestCase, RestUser
 
-        class UserTest(RestTest):
+        class UserTest(RestTestCase):
             another_user = RestUser
 
         class InheritedUserTest(UserTest):
@@ -84,9 +84,9 @@ class BasicTestCase(unittest.TestCase):
         )
 
     def test_user_inheritance_override(self):
-        from rest_test import RestTest, RestUser
+        from rest_test import RestTestCase, RestUser
 
-        class UserTest(RestTest):
+        class UserTest(RestTestCase):
             another_user = RestUser
 
         class InheritedUserTest(UserTest):
