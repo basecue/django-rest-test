@@ -213,7 +213,7 @@ class AllRestUsers():
         raise AttributeError
 
 
-class MetaRestTests(type):
+class MetaRestTest(type):
 
     @property
     def rest_users(self):
@@ -297,7 +297,7 @@ class RestUser(object):
         return operation in self.allowed_operations
 
 
-class RestTests(BaseAPITestCase, metaclass=MetaRestTests):
+class RestTest(BaseAPITestCase, metaclass=MetaRestTest):
 
     all_users = AllRestUsers()
     anonymous_user = RestUser
@@ -342,7 +342,7 @@ class RestTests(BaseAPITestCase, metaclass=MetaRestTests):
         if output_data is None:
             assert response.status_code == status.HTTP_204_NO_CONTENT
         else:
-            assert response.status_code == output_status
+            assert output_status == output_status
             # TODO - maybe: if hasattr(response, 'data') else None
             self.assert_compare(response.data, output_data)
 

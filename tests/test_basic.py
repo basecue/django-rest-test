@@ -6,13 +6,13 @@ class BasicTestCase(unittest.TestCase):
         return [name for name in dir(cls) if name.startswith('test_')]
 
     def test_anonymous(self):
-        from rest_tests import RestTests
+        from rest_test import RestTest
 
-        class AnonymousTests(RestTests):
+        class AnonymousTest(RestTest):
             pass
 
         self.assertCountEqual(
-            self._dir_tests(AnonymousTests),
+            self._dir_tests(AnonymousTest),
             [
                 'test_create_by_anonymous_user',
                 'test_retrieve_by_anonymous_user',
@@ -24,13 +24,13 @@ class BasicTestCase(unittest.TestCase):
         )
 
     def test_user(self):
-        from rest_tests import RestTests, RestUser
+        from rest_test import RestTest, RestUser
 
-        class UserTests(RestTests):
+        class UserTest(RestTest):
             another_user = RestUser
 
         self.assertCountEqual(
-            self._dir_tests(UserTests),
+            self._dir_tests(UserTest),
             [
                 'test_create_by_anonymous_user',
                 'test_retrieve_by_anonymous_user',
@@ -49,16 +49,16 @@ class BasicTestCase(unittest.TestCase):
         )
 
     def test_user_inheritance(self):
-        from rest_tests import RestTests, RestUser
+        from rest_test import RestTest, RestUser
 
-        class UserTests(RestTests):
+        class UserTest(RestTest):
             another_user = RestUser
 
-        class InheritedUserTests(UserTests):
+        class InheritedUserTest(UserTest):
             another_user_2 = RestUser
 
         self.assertCountEqual(
-            self._dir_tests(InheritedUserTests),
+            self._dir_tests(InheritedUserTest),
             [
                 'test_create_by_anonymous_user',
                 'test_retrieve_by_anonymous_user',
@@ -84,16 +84,16 @@ class BasicTestCase(unittest.TestCase):
         )
 
     def test_user_inheritance_override(self):
-        from rest_tests import RestTests, RestUser
+        from rest_test import RestTest, RestUser
 
-        class UserTests(RestTests):
+        class UserTest(RestTest):
             another_user = RestUser
 
-        class InheritedUserTests(UserTests):
+        class InheritedUserTest(UserTest):
             another_user = RestUser
 
         self.assertCountEqual(
-            self._dir_tests(InheritedUserTests),
+            self._dir_tests(InheritedUserTest),
             [
                 'test_create_by_anonymous_user',
                 'test_retrieve_by_anonymous_user',

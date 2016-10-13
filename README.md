@@ -8,9 +8,9 @@ Django REST tests automatically checks outputs of the API according to declared 
 ## basic usage
 
 ```python
-from rest_tests import RestTests, RestUser
+from rest_test import RestTest, RestUser
 
-class AnonymousReadOnlyTestCase(RestTests):
+class AnonymousReadOnlyTestCase(RestTest):
     
     anonymous_user = RestUser(
         can_retrieve=True,
@@ -41,9 +41,9 @@ The example creates six tests:
 ## tests for more users
 
 ```python
-from rest_tests import RestTests, RestUser
+from rest_test import RestTest, RestUser
 
-class MultiUserTestCase(RestTests):
+class MultiUserTestCase(RestTest):
     
     anonymous_user = RestUser(
         can_retrieve=True,
@@ -157,9 +157,9 @@ This means that output_retrieve must be dictionary object with any keys.
 ### More realistic example with ellipsis wildcards
 
 ```python
-from rest_tests import RestTests, RestUser
+from rest_test import RestTest, RestUser
 
-class MultiUserTestCase(RestTests):
+class MultiUserTestCase(RestTest):
     
     anonymous_user = RestUser(
         can_retrieve=True,
@@ -216,9 +216,9 @@ This means that the value of key 'name' is 'test_name', key 'description' is `st
 You can combine everything together:
 
 ```python
-from rest_tests import RestTests, RestUser
+from rest_test import RestTest, RestUser
 
-class MultiUserTestCase(RestTests):
+class MultiUserTestCase(RestTest):
     
     anonymous_user = RestUser(
         can_retrieve=True,
