@@ -1,5 +1,5 @@
 import unittest
-from rest_tests import compare
+from rest_test import compare
 
 
 class DictTestCase(unittest.TestCase):

@@ -1,16 +1,19 @@
-# django-rest-tests
-[![PyPI version](https://badge.fury.io/py/django-rest-tests.svg)](https://badge.fury.io/py/django-rest-tests)
+# django-rest-test
+[![PyPI version](https://badge.fury.io/py/django-rest-test.svg)](https://badge.fury.io/py/django-rest-test)
 
 Semi-automated testing for API created with Django REST framework.
 
-Django REST tests automatically checks outputs of the API according to declared inputs and users.
+Django REST test automatically checks outputs of the API according to declared inputs and users.
+## Installation
+
+`$ pip install django-rest-test`
 
 ## basic usage
 
 ```python
-from rest_tests import RestTests, RestUser
+from rest_test import RestTestCase, RestUser
 
-class AnonymousReadOnlyTestCase(RestTests):
+class AnonymousReadOnlyTestCase(RestTestCase):
     
     anonymous_user = RestUser(
         can_retrieve=True,
@@ -41,9 +44,9 @@ The example creates six tests:
 ## tests for more users
 
 ```python
-from rest_tests import RestTests, RestUser
+from rest_test import RestTestCase, RestUser
 
-class MultiUserTestCase(RestTests):
+class MultiUserTestCase(RestTestCase):
     
     anonymous_user = RestUser(
         can_retrieve=True,
@@ -157,9 +160,9 @@ This means that output_retrieve must be dictionary object with any keys.
 ### More realistic example with ellipsis wildcards
 
 ```python
-from rest_tests import RestTests, RestUser
+from rest_test import RestTestCase, RestUser
 
-class MultiUserTestCase(RestTests):
+class MultiUserTestCase(RestTestCase):
     
     anonymous_user = RestUser(
         can_retrieve=True,
@@ -216,9 +219,9 @@ This means that the value of key 'name' is 'test_name', key 'description' is `st
 You can combine everything together:
 
 ```python
-from rest_tests import RestTests, RestUser
+from rest_test import RestTestCase, RestUser
 
-class MultiUserTestCase(RestTests):
+class MultiUserTestCase(RestTestCase):
     
     anonymous_user = RestUser(
         can_retrieve=True,

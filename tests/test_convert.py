@@ -1,5 +1,5 @@
 import unittest
-from rest_tests import convert_data
+from rest_test import convert_data
 from collections import OrderedDict
 
 

@@ -155,6 +155,7 @@ class BaseAPITestCase(APITestCase):
             )
         )
         assert status_code in (
+            status.HTTP_401_UNAUTHORIZED,
             status.HTTP_404_NOT_FOUND,
             status.HTTP_405_METHOD_NOT_ALLOWED,
             status.HTTP_403_FORBIDDEN
@@ -213,7 +214,7 @@ class AllRestUsers():
         raise AttributeError
 
 
-class MetaRestTests(type):
+class MetaRestTestCase(type):
 
     @property
     def rest_users(self):
@@ -297,7 +298,7 @@ class RestUser(object):
         return operation in self.allowed_operations
 
 
-class RestTests(BaseAPITestCase, metaclass=MetaRestTests):
+class RestTestCase(BaseAPITestCase, metaclass=MetaRestTestCase):
 
     all_users = AllRestUsers()
     anonymous_user = RestUser
@@ -342,7 +343,7 @@ class RestTests(BaseAPITestCase, metaclass=MetaRestTests):
         if output_data is None:
             assert response.status_code == status.HTTP_204_NO_CONTENT
         else:
-            assert response.status_code == output_status
+            assert output_status == output_status
             # TODO - maybe: if hasattr(response, 'data') else None
             self.assert_compare(response.data, output_data)
 
