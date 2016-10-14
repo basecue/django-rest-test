@@ -155,6 +155,7 @@ class BaseAPITestCase(APITestCase):
             )
         )
         assert status_code in (
+            status.HTTP_401_UNAUTHORIZED,
             status.HTTP_404_NOT_FOUND,
             status.HTTP_405_METHOD_NOT_ALLOWED,
             status.HTTP_403_FORBIDDEN

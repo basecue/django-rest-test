@@ -1,9 +1,12 @@
-# django-rest-tests
-[![PyPI version](https://badge.fury.io/py/django-rest-tests.svg)](https://badge.fury.io/py/django-rest-tests)
+# django-rest-test
+[![PyPI version](https://badge.fury.io/py/django-rest-test.svg)](https://badge.fury.io/py/django-rest-test)
 
 Semi-automated testing for API created with Django REST framework.
 
-Django REST tests automatically checks outputs of the API according to declared inputs and users.
+Django REST test automatically checks outputs of the API according to declared inputs and users.
+## Installation
+
+`$ pip install django-rest-test`
 
 ## basic usage
 
