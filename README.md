@@ -38,7 +38,7 @@ class AnonymousReadOnlyTestCase(RestTestCase):
         
 The example creates six tests: 
  * __two__ for retrieve and list views which check outputs against to defined `output_retrieve` and `output_list` structures.
- * and __four__ "smoke tests" for create, update, delete and patch views which expect `HTTP_404_NOT_FOUND`, `HTTP_405_METHOD_NOT_ALLOWED` or `HTTP_403_FORBIDDEN` status.
+ * and __four__ "smoke tests" for create, update, delete and patch views which expect `HTTP_401_UNAUTHORIZED`, `HTTP_404_NOT_FOUND`, `HTTP_405_METHOD_NOT_ALLOWED` or `HTTP_403_FORBIDDEN` status.
 
  
 ## tests for more users
