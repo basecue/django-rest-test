@@ -124,6 +124,7 @@ def convert_data(data):
 
 class BaseAPITestCase(APITestCase):
     def _request(self, method, url, data=None):
+        print("Tested url: '{url}'".format(url=url))
         response = getattr(self.client, method)(url, data=data, format='json')
         return response
 
@@ -144,22 +145,19 @@ class BaseAPITestCase(APITestCase):
 
     # assert methods
     def assert_disabled(self, status_code):
-        msg = pformat(
-            dict(
-                response_status_code=status_code,
-                expected_status_codes=(
-                    status.HTTP_404_NOT_FOUND,
-                    status.HTTP_405_METHOD_NOT_ALLOWED,
-                    status.HTTP_403_FORBIDDEN
-                )
-            )
-        )
-        assert status_code in (
+        expected_status_codes = (
             status.HTTP_401_UNAUTHORIZED,
             status.HTTP_404_NOT_FOUND,
             status.HTTP_405_METHOD_NOT_ALLOWED,
             status.HTTP_403_FORBIDDEN
-        ), msg
+        )
+        msg = pformat(
+            dict(
+                response_status_code=status_code,
+                expected_status_codes=expected_status_codes
+            )
+        )
+        assert status_code in expected_status_codes, msg
 
     def assert_compare(self, data, expected_data):
         data = convert_data(data)
