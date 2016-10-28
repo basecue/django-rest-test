@@ -263,7 +263,7 @@ class MetaRestTestCase(type):
 class RestUser(object):
     def __init__(self, name=None, user=None, **kwargs):
         self.name = name
-        self.user = user
+        self.bound_user = user
         self.allowed_operations = set()
 
         for operation in OPERATIONS:
@@ -271,14 +271,14 @@ class RestUser(object):
             if kwargs.get(kwarg, False):
                 self.allowed_operations.add(operation)
 
-    def __set__(self, obj, user):
-        self.user = user
-
     def __eq__(self, other):
         return self.name == other.name
 
     def __hash__(self):
         return id(self.name)
+
+    def bind_user(self, user):
+        self.bound_user = user
 
     def _decorator(self, operation):
         def class_wrapper(cls):
@@ -328,7 +328,7 @@ class RestTestCase(BaseAPITestCase, metaclass=MetaRestTestCase):
             operation=operation, rest_user=rest_user)
         )
         if rest_user is not None:
-            self._login(rest_user.user)
+            self._login(rest_user.bound_user)
 
         input_data = self._get_input_data(rest_user, operation)
 
@@ -353,8 +353,8 @@ class RestTestCase(BaseAPITestCase, metaclass=MetaRestTestCase):
 
     def _test_disabled(self, rest_user=None, operation=''):
         print("Operation '{operation}' for '{rest_user.name}' is disabled.".format(operation=operation, rest_user=rest_user))
-        if rest_user.user is not None:
-            self.login(rest_user.user)
+        if rest_user.bound_user is not None:
+            self.login(rest_user.bound_user)
 
         # no input data
         input_data_list = [None]
