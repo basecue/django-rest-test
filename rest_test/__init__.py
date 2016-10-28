@@ -190,7 +190,7 @@ class BaseAPITestCase(APITestCase):
     def patch(self, input_data=None):
         return self._patch(self.url_detail, data=input_data)
 
-    def _login(self, user):
+    def login(self, user):
         self.client.force_authenticate(user=user)
 
 
@@ -328,7 +328,7 @@ class RestTestCase(BaseAPITestCase, metaclass=MetaRestTestCase):
             operation=operation, rest_user=rest_user)
         )
         if rest_user is not None:
-            self._login(rest_user.bound_user)
+            self.login(rest_user.bound_user)
 
         input_data = self._get_input_data(rest_user, operation)
 
