@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='django-rest-test',
-    version='0.7.5b',
+    version='0.7.6b',
     url='http://github.com/baseclue/django-rest-test',
     license='Apache 2.0',
     author='Jan Češpivo',

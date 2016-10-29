@@ -124,7 +124,8 @@ def convert_data(data):
 
 class BaseAPITestCase(APITestCase):
     def _request(self, method, url, data=None):
-        print("Tested url: '{url}'".format(url=url))
+        # TODO add URL to assert message
+        # print("Tested url: '{url}'".format(url=url))
         response = getattr(self.client, method)(url, data=data, format='json')
         return response
 
@@ -144,30 +145,47 @@ class BaseAPITestCase(APITestCase):
         return self._request('patch', url, data=data)
 
     # assert methods
-    def assert_disabled(self, status_code):
+    def assert_disabled(self, status_code, msg):
         expected_status_codes = (
             status.HTTP_401_UNAUTHORIZED,
             status.HTTP_404_NOT_FOUND,
             status.HTTP_405_METHOD_NOT_ALLOWED,
             status.HTTP_403_FORBIDDEN
         )
-        msg = pformat(
-            dict(
+
+        # TODO refactor - reverse msg composing
+        msg = "{msg}\n{info}".format(
+            msg=msg,
+            info=pformat(dict(
                 response_status_code=status_code,
                 expected_status_codes=expected_status_codes
-            )
+            ))
         )
         assert status_code in expected_status_codes, msg
 
-    def assert_compare(self, data, expected_data):
+    def assert_compare(self, data, expected_data, msg):
         data = convert_data(data)
-        msg = pformat(
-            dict(
+
+        # TODO refactor - reverse msg composing
+        msg = "{msg}\n{info}".format(
+            msg=msg,
+            info=pformat(dict(
                 response_data=data,
                 expected_data=expected_data
-            )
+            ))
         )
         assert compare(data, expected_data), msg
+
+    def assert_status_code(self, response_status_code, expected_status_code, msg):
+        # TODO refactor - reverse msg composing
+        msg = """{msg}
+        Response output data is empty.
+        Expected response status code was '{expected_status_code}' but got '{response_status_code}'.""".format(
+            msg=msg,
+            response_status_code=response_status_code,
+            expected_status_code=expected_status_code
+        )
+        assert response_status_code == expected_status_code, msg
 
     url = ''
     url_detail = ''
@@ -333,26 +351,30 @@ class RestTestCase(BaseAPITestCase, metaclass=MetaRestTestCase):
         )
 
     def _test(self, rest_user=None, operation=''):
-        print("Operation '{operation}' for '{rest_user.name}' is enabled.".format(
-            operation=operation, rest_user=rest_user)
+        msg = "Operation '{operation}' for '{rest_user.name}' is enabled.".format(
+            operation=operation, rest_user=rest_user
         )
+
         if rest_user is not None:
             self.login(rest_user.bound_user)
 
         input_data = self._get_input_data(rest_user, operation)
 
-        output_data = self._get_output_data(rest_user, operation)
-
-        output_status = self._get_output_status(rest_user, operation)
+        expected_output_data = self._get_output_data(rest_user, operation)
 
         response = getattr(self, operation)(input_data)
 
-        if output_data is None:
-            assert response.status_code == status.HTTP_204_NO_CONTENT
+        response_status_code = response.status_code
+
+        if expected_output_data is None:
+            # TODO assert if it is defined some expected response status code
+            self.assert_status_code(response_status_code, status.HTTP_204_NO_CONTENT, msg)
         else:
-            assert output_status == output_status
+            expected_status_code = self._get_output_status(rest_user, operation)
+            self.assert_status_code(response_status_code, expected_status_code, msg)
+
             # TODO - maybe: if hasattr(response, 'data') else None
-            self.assert_compare(response.data, output_data)
+            self.assert_compare(response.data, expected_output_data, msg)
 
     def _get_test(self, rest_user, operation):
         if rest_user.can(operation):
@@ -361,7 +383,9 @@ class RestTestCase(BaseAPITestCase, metaclass=MetaRestTestCase):
             return partial(self._test_disabled, rest_user=rest_user, operation=operation)
 
     def _test_disabled(self, rest_user=None, operation=''):
-        print("Operation '{operation}' for '{rest_user.name}' is disabled.".format(operation=operation, rest_user=rest_user))
+        msg = "Operation '{operation}' for '{rest_user.name}' is disabled.".format(
+            operation=operation, rest_user=rest_user
+        )
         if rest_user.bound_user is not None:
             self.login(rest_user.bound_user)
 
@@ -377,7 +401,7 @@ class RestTestCase(BaseAPITestCase, metaclass=MetaRestTestCase):
 
         for input_data in input_data_list:
             response = getattr(self, operation)(input_data)
-            self.assert_disabled(response.status_code)
+            self.assert_disabled(response.status_code, msg)
 
     def __getattr__(self, attr_name):
         for test_name, rest_user, operation in self.__class__.test_names:
