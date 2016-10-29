@@ -220,6 +220,9 @@ class MetaRestTestCase(type):
 
     @property
     def test_names(self):
+        if not self.__test__:
+            raise StopIteration()
+
         for rest_user in self.rest_users:
             for operation in OPERATIONS:
                 yield 'test_{operation}_by_{rest_user.name}'.format(
@@ -251,6 +254,10 @@ class MetaRestTestCase(type):
             rest_user = RestUser(name=rest_user_name)
             rest_users.add(rest_user)
             setattr(cls, rest_user_name, rest_user)
+
+        # pytest compatible support for excluding whole TestCase - ie. for inheritance and for some test suits
+        if '__test__' not in attrs:
+            cls.__test__ = attrs.get('_{}__test'.format(name), True)
 
         cls._rest_users_names = rest_users_names
         cls._rest_users = rest_users
@@ -301,6 +308,8 @@ class RestTestCase(BaseAPITestCase, metaclass=MetaRestTestCase):
     all_users = AllRestUsers()
     anonymous_user = RestUser
     output_status_create = status.HTTP_201_CREATED
+
+    __test = False
 
     def _get_input_data(self, rest_user, operation):
         return getattr(
