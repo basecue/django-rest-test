@@ -124,6 +124,7 @@ def convert_data(data):
 
 class BaseAPITestCase(APITestCase):
     def _request(self, method, url, data=None):
+        print("Tested url: '{url}'".format(url=url))
         response = getattr(self.client, method)(url, data=data, format='json')
         return response
 
@@ -144,22 +145,19 @@ class BaseAPITestCase(APITestCase):
 
     # assert methods
     def assert_disabled(self, status_code):
-        msg = pformat(
-            dict(
-                response_status_code=status_code,
-                expected_status_codes=(
-                    status.HTTP_404_NOT_FOUND,
-                    status.HTTP_405_METHOD_NOT_ALLOWED,
-                    status.HTTP_403_FORBIDDEN
-                )
-            )
-        )
-        assert status_code in (
+        expected_status_codes = (
             status.HTTP_401_UNAUTHORIZED,
             status.HTTP_404_NOT_FOUND,
             status.HTTP_405_METHOD_NOT_ALLOWED,
             status.HTTP_403_FORBIDDEN
-        ), msg
+        )
+        msg = pformat(
+            dict(
+                response_status_code=status_code,
+                expected_status_codes=expected_status_codes
+            )
+        )
+        assert status_code in expected_status_codes, msg
 
     def assert_compare(self, data, expected_data):
         data = convert_data(data)
@@ -192,7 +190,7 @@ class BaseAPITestCase(APITestCase):
     def patch(self, input_data=None):
         return self._patch(self.url_detail, data=input_data)
 
-    def _login(self, user):
+    def login(self, user):
         self.client.force_authenticate(user=user)
 
 
@@ -222,6 +220,9 @@ class MetaRestTestCase(type):
 
     @property
     def test_names(self):
+        if not self.__test__:
+            raise StopIteration()
+
         for rest_user in self.rest_users:
             for operation in OPERATIONS:
                 yield 'test_{operation}_by_{rest_user.name}'.format(
@@ -254,6 +255,10 @@ class MetaRestTestCase(type):
             rest_users.add(rest_user)
             setattr(cls, rest_user_name, rest_user)
 
+        # pytest compatible support for excluding whole TestCase - ie. for inheritance and for some test suits
+        if '__test__' not in attrs:
+            cls.__test__ = attrs.get('_{}__test'.format(name), True)
+
         cls._rest_users_names = rest_users_names
         cls._rest_users = rest_users
         super().__init__(name, bases, attrs)
@@ -265,7 +270,7 @@ class MetaRestTestCase(type):
 class RestUser(object):
     def __init__(self, name=None, user=None, **kwargs):
         self.name = name
-        self.user = user
+        self.bound_user = user
         self.allowed_operations = set()
 
         for operation in OPERATIONS:
@@ -273,14 +278,14 @@ class RestUser(object):
             if kwargs.get(kwarg, False):
                 self.allowed_operations.add(operation)
 
-    def __set__(self, obj, user):
-        self.user = user
-
     def __eq__(self, other):
         return self.name == other.name
 
     def __hash__(self):
         return id(self.name)
+
+    def bind_user(self, user):
+        self.bound_user = user
 
     def _decorator(self, operation):
         def class_wrapper(cls):
@@ -303,6 +308,8 @@ class RestTestCase(BaseAPITestCase, metaclass=MetaRestTestCase):
     all_users = AllRestUsers()
     anonymous_user = RestUser
     output_status_create = status.HTTP_201_CREATED
+
+    __test = False
 
     def _get_input_data(self, rest_user, operation):
         return getattr(
@@ -330,7 +337,7 @@ class RestTestCase(BaseAPITestCase, metaclass=MetaRestTestCase):
             operation=operation, rest_user=rest_user)
         )
         if rest_user is not None:
-            self._login(rest_user.user)
+            self.login(rest_user.bound_user)
 
         input_data = self._get_input_data(rest_user, operation)
 
@@ -355,8 +362,8 @@ class RestTestCase(BaseAPITestCase, metaclass=MetaRestTestCase):
 
     def _test_disabled(self, rest_user=None, operation=''):
         print("Operation '{operation}' for '{rest_user.name}' is disabled.".format(operation=operation, rest_user=rest_user))
-        if rest_user.user is not None:
-            self.login(rest_user.user)
+        if rest_user.bound_user is not None:
+            self.login(rest_user.bound_user)
 
         # no input data
         input_data_list = [None]
