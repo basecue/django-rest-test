@@ -179,7 +179,6 @@ class BaseAPITestCase(APITestCase):
     def assert_status_code(self, response_status_code, expected_status_code, msg):
         # TODO refactor - reverse msg composing
         msg = """{msg}
-        Response output data is empty.
         Expected response status code was '{expected_status_code}' but got '{response_status_code}'.""".format(
             msg=msg,
             response_status_code=response_status_code,
@@ -343,11 +342,11 @@ class RestTestCase(BaseAPITestCase, metaclass=MetaRestTestCase):
             getattr(self, 'output_{operation}'.format(operation=operation), None)
         )
 
-    def _get_output_status(self, rest_user, operation):
+    def _get_output_status(self, rest_user, operation, default_output_status):
         return getattr(
             self,
             'output_status_{operation}_{rest_user.name}'.format(operation=operation, rest_user=rest_user),
-            getattr(self, 'output_status_{operation}'.format(operation=operation), status.HTTP_200_OK)
+            getattr(self, 'output_status_{operation}'.format(operation=operation), default_output_status)
         )
 
     def _test(self, rest_user=None, operation=''):
@@ -362,19 +361,27 @@ class RestTestCase(BaseAPITestCase, metaclass=MetaRestTestCase):
 
         expected_output_data = self._get_output_data(rest_user, operation)
 
+        if expected_output_data is None:
+            default_expected_output_status = status.HTTP_204_NO_CONTENT
+        else:
+            default_expected_output_status = status.HTTP_200_OK
+
+        expected_status_code = self._get_output_status(rest_user, operation, default_expected_output_status)
+
+        if expected_output_data is None:
+            msg = "{msg}\nDefine output data to value other than 'None' or change expected status code to HTTP_204_NO_CONTENT ({status_code})".format(
+                msg=msg,
+                status_code=status.HTTP_204_NO_CONTENT
+            )
+            assert expected_status_code == status.HTTP_204_NO_CONTENT, msg
+
         response = getattr(self, operation)(input_data)
 
         response_status_code = response.status_code
+        response_data = getattr(response, 'data', None)
 
-        if expected_output_data is None:
-            # TODO assert if it is defined some expected response status code
-            self.assert_status_code(response_status_code, status.HTTP_204_NO_CONTENT, msg)
-        else:
-            expected_status_code = self._get_output_status(rest_user, operation)
-            self.assert_status_code(response_status_code, expected_status_code, msg)
-
-            # TODO - maybe: if hasattr(response, 'data') else None
-            self.assert_compare(response.data, expected_output_data, msg)
+        self.assert_status_code(response_status_code, expected_status_code, msg)
+        self.assert_compare(response_data, expected_output_data, msg)
 
     def _get_test(self, rest_user, operation):
         if rest_user.can(operation):
